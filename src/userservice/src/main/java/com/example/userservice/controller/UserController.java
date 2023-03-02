@@ -41,8 +41,7 @@ public class UserController {
 //        변환 객체간 필드 명이 정확이 일치해야함
         mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
 
-        UserDto userDto = mapper.map
-                (user, UserDto.class);
+        UserDto userDto = mapper.map(user, UserDto.class);
         userService.createUser(userDto);
 
         ResponseUser responseUser = mapper.map(userDto, ResponseUser.class);
@@ -50,9 +49,11 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseUser);
     }
 
-    @GetMapping("/user/{id}")
-    public ResponseEntity<Map<String,Object>> getUser(@PathVariable("id") String userId) {
+    @GetMapping("/user/profile")
+    public ResponseEntity<Map<String,Object>> getUser(@RequestHeader(value = "Authorization") String atk) {
         Map<String, Object> res = new HashMap<>();
+        atk = atk.substring(7);
+        String userId = tokenProvider.getIdFromAccessToken(atk);
         ResponseDetailUser userDetail = userService.getUserDetailsByUserId(userId);
 
         ResponseDetailUser returnValue = new ModelMapper().map(userDetail, ResponseDetailUser.class);
@@ -62,9 +63,11 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
-    @PostMapping("/user/{id}")
-    public ResponseEntity<ResponseUser> updateUser(@PathVariable("id") String userId,
+    @PostMapping("/user/profile")
+    public ResponseEntity<ResponseUser> updateUser(@RequestHeader(value = "Authorization") String atk,
                                                    @RequestBody RequestUpdateUser userInfo) {
+        atk = atk.substring(7);
+        String userId = tokenProvider.getIdFromAccessToken(atk);
         UserDto userDto = userService.updateUser(userId, userInfo);
 
         ResponseUser returnValue = new ModelMapper().map(userDto, ResponseUser.class);
@@ -72,8 +75,10 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(returnValue);
     }
 
-    @DeleteMapping("/user/{id}")
-    public ResponseEntity deleteUser(@PathVariable("id") String userId) {
+    @DeleteMapping("/user")
+    public ResponseEntity deleteUser(@RequestHeader(value = "Authorization") String atk) {
+        atk = atk.substring(7);
+        String userId = tokenProvider.getIdFromAccessToken(atk);
         userService.deleteUser(userId);
 
         return ResponseEntity.status(HttpStatus.OK).body("사용자 삭제 완료" + userId);
